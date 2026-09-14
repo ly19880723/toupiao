@@ -53,7 +53,7 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
         if (Array.isArray(data)) {
           setSubmissions(data);
         } else {
-          setError('返回数据格式异常');
+          setError('返回数据格式异常: ' + JSON.stringify(result).slice(0, 200));
         }
         setLoading(false);
       })
@@ -448,6 +448,9 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
         <p style={{ color: '#d4602f', marginBottom: '16px' }}>{error}</p>
         <p style={{ fontSize: '14px', color: 'var(--animal-text-muted)' }}>
           提交总数: {submissions.length}
+        </p>
+        <p style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
+          若问题持续，请打开浏览器开发者工具查看网络请求详情
         </p>
       </div>
     );

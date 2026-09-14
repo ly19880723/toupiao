@@ -10,8 +10,11 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     });
     return NextResponse.json({ results });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Fetch results error:', error);
-    return NextResponse.json({ error: '查询失败' }, { status: 500 });
+    return NextResponse.json({ 
+      error: '查询失败',
+      detail: error?.message || String(error)
+    }, { status: 500 });
   }
 }

@@ -26,8 +26,11 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ success: true, id: record.id });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Submit error:', error);
-    return NextResponse.json({ error: '提交失败' }, { status: 500 });
+    return NextResponse.json({ 
+      error: '提交失败',
+      detail: error?.message || String(error)
+    }, { status: 500 });
   }
 }

@@ -9,7 +9,6 @@ export async function GET() {
       orderBy: { sortOrder: 'asc' }
     });
     
-    // Convert database format to frontend format
     const prizeMap: Record<string, { label: string; icon: string; subs: { value: string; label: string }[] }> = {};
     prizes.forEach(p => {
       prizeMap[p.key] = {
@@ -20,9 +19,12 @@ export async function GET() {
     });
     
     return NextResponse.json({ data: prizeMap });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Fetch prizes error:', error);
-    return NextResponse.json({ error: '查询失败' }, { status: 500 });
+    return NextResponse.json({ 
+      error: '查询失败',
+      detail: error?.message || String(error)
+    }, { status: 500 });
   }
 }
 
