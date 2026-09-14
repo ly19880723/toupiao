@@ -10,8 +10,14 @@ interface PrizeData {
   subs: { value: string; label: string }[];
 }
 
+interface GroupedPrizeData {
+  first: Record<string, PrizeData>;
+  second: Record<string, PrizeData>;
+  third: Record<string, PrizeData>;
+}
+
 interface StatsPanelProps {
-  prizeData: Record<string, PrizeData>;
+  prizeData: GroupedPrizeData;
 }
 
 interface SubStat {
@@ -70,16 +76,16 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
     );
   };
 
-  const calculateStats = (catKey: string, subKey: string): PrizeStats => {
+  const calculateStats = (catKey: string, subKey: string, levelData: Record<string, PrizeData>): PrizeStats => {
     const stats: Record<string, CategoryStat> = {};
     let totalVotes = 0;
 
     // Initialize with all known categories from prizeData
-    Object.keys(prizeData).forEach(key => {
+    Object.keys(levelData).forEach(key => {
       stats[key] = {
-        label: prizeData[key].label,
+        label: levelData[key].label,
         count: 0,
-        subs: prizeData[key].subs.reduce((acc, sub) => {
+        subs: levelData[key].subs.reduce((acc, sub) => {
           acc[sub.value] = { label: sub.label, count: 0 };
           return acc;
         }, {} as Record<string, SubStat>),
@@ -90,7 +96,12 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
       const catValue = sub[catKey] as string;
       const subValue = sub[subKey] as string;
       if (!catValue) return;
-      
+
+      // Handle custom other values (prefix: __OTHER__)
+      const isOther = subValue?.startsWith('__OTHER__:');
+      const actualSubValue = isOther ? '__other__' : subValue;
+      const customLabel = isOther ? subValue.replace('__OTHER__:', '') : null;
+
       // If category doesn't exist in prizeData, create it dynamically
       if (!stats[catValue]) {
         stats[catValue] = {
@@ -99,28 +110,39 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
           subs: {},
         };
       }
-      
+
       stats[catValue].count++;
       totalVotes++;
-      
-      if (subValue) {
-        if (!stats[catValue].subs[subValue]) {
-          stats[catValue].subs[subValue] = { label: subValue, count: 0 };
+
+      if (actualSubValue) {
+        if (!stats[catValue].subs[actualSubValue]) {
+          stats[catValue].subs[actualSubValue] = { 
+            label: customLabel || actualSubValue, 
+            count: 0 
+          };
         }
-        stats[catValue].subs[subValue].count++;
+        stats[catValue].subs[actualSubValue].count++;
       }
     });
 
     return { stats, totalVotes };
   };
 
-  const firstPrize = useMemo(() => calculateStats('firstCat', 'firstSub'), [submissions, prizeData]);
-  const secondPrize = useMemo(() => calculateStats('secondCat', 'secondSub'), [submissions, prizeData]);
-  const thirdPrize = useMemo(() => calculateStats('thirdCat', 'thirdSub'), [submissions, prizeData]);
+  const firstPrize = useMemo(() => calculateStats('firstCat', 'firstSub', prizeData.first), [submissions, prizeData.first]);
+  const secondPrize = useMemo(() => calculateStats('secondCat', 'secondSub', prizeData.second), [submissions, prizeData.second]);
+  const thirdPrize = useMemo(() => calculateStats('thirdCat', 'thirdSub', prizeData.third), [submissions, prizeData.third]);
 
-  const getPrizeLabel = (catValue: string, subValue: string) => {
-    const cat = prizeData[catValue];
-    if (!cat) return catValue || '-';
+  const getPrizeLabel = (catValue: string, subValue: string, level: 'first' | 'second' | 'third') => {
+    if (!catValue) return '-';
+    const cat = prizeData[level]?.[catValue];
+    if (!cat) return catValue;
+    
+    // Handle custom other values
+    if (subValue?.startsWith('__OTHER__:')) {
+      const customText = subValue.replace('__OTHER__:', '');
+      return `${cat.label} - ${customText} (自定义)`;
+    }
+    
     const sub = cat.subs.find(s => s.value === subValue);
     return `${cat.label}${sub ? ` - ${sub.label}` : ''}`;
   };
@@ -135,121 +157,66 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
     const records = submissions.map((sub, idx) => ({
       序号: idx + 1,
       姓名: sub.name || '-',
-      一等奖: getPrizeLabel(sub.firstCat, sub.firstSub),
-      二等奖: getPrizeLabel(sub.secondCat, sub.secondSub),
-      三等奖: getPrizeLabel(sub.thirdCat, sub.thirdSub),
+      一等奖: getPrizeLabel(sub.firstCat, sub.firstSub, 'first'),
+      二等奖: getPrizeLabel(sub.secondCat, sub.secondSub, 'second'),
+      三等奖: getPrizeLabel(sub.thirdCat, sub.thirdSub, 'third'),
       建议: sub.suggestions || '-',
       提交时间: sub.createdAt ? new Date(sub.createdAt).toLocaleString('zh-CN') : '-',
     }));
     const wsRecords = XLSX.utils.json_to_sheet(records);
     XLSX.utils.book_append_sheet(wb, wsRecords, '提交名单');
 
-    // Sheet 2: 一等奖统计
-    const firstRows: any[] = [];
-    Object.entries(firstPrize.stats)
-      .filter(([_, cat]) => cat.count > 0)
-      .sort((a, b) => b[1].count - a[1].count)
-      .forEach(([catKey, cat]) => {
-        const catPct = firstPrize.totalVotes > 0 ? Math.round((cat.count / firstPrize.totalVotes) * 100) : 0;
-        firstRows.push({
-          奖项: '一等奖',
-          大类: cat.label,
-          大类票数: cat.count,
-          大类占比: catPct + '%',
-          子类: '(大类汇总)',
-          子类票数: '',
-          子类占比: '',
-        });
-        Object.entries(cat.subs)
-          .filter(([_, sub]) => sub.count > 0)
-          .sort((a, b) => b[1].count - a[1].count)
-          .forEach(([subKey, sub]) => {
-            const subPct = cat.count > 0 ? Math.round((sub.count / cat.count) * 100) : 0;
-            firstRows.push({
-              奖项: '一等奖',
-              大类: '',
-              大类票数: '',
-              大类占比: '',
-              子类: sub.label,
-              子类票数: sub.count,
-              子类占比: subPct + '%',
-            });
+    // Helper to build prize stats sheet
+    const buildPrizeSheet = (title: string, level: 'first' | 'second' | 'third', prizeStats: PrizeStats, color: string) => {
+      const rows: any[] = [];
+      Object.entries(prizeStats.stats)
+        .filter(([_, cat]) => cat.count > 0)
+        .sort((a, b) => b[1].count - a[1].count)
+        .forEach(([catKey, cat]) => {
+          const catPct = prizeStats.totalVotes > 0 ? Math.round((cat.count / prizeStats.totalVotes) * 100) : 0;
+          rows.push({
+            奖项: title,
+            大类: cat.label,
+            大类票数: cat.count,
+            大类占比: catPct + '%',
+            子类: '(大类汇总)',
+            子类票数: '',
+            子类占比: '',
           });
-      });
+          Object.entries(cat.subs)
+            .filter(([_, sub]) => sub.count > 0)
+            .sort((a, b) => b[1].count - a[1].count)
+            .forEach(([subKey, sub]) => {
+              const subPct = cat.count > 0 ? Math.round((sub.count / cat.count) * 100) : 0;
+              rows.push({
+                奖项: title,
+                大类: '',
+                大类票数: '',
+                大类占比: '',
+                子类: sub.label,
+                子类票数: sub.count,
+                子类占比: subPct + '%',
+              });
+            });
+        });
+      return rows;
+    };
+
+    // Sheet 2-4: 各奖项统计
+    const firstRows = buildPrizeSheet('一等奖', 'first', firstPrize, '#c49a2e');
+    const secondRows = buildPrizeSheet('二等奖', 'second', secondPrize, '#5a9e8a');
+    const thirdRows = buildPrizeSheet('三等奖', 'third', thirdPrize, '#8f6a4e');
+
     const wsFirst = XLSX.utils.json_to_sheet(firstRows);
     XLSX.utils.book_append_sheet(wb, wsFirst, '一等奖统计');
 
-    // Sheet 3: 二等奖统计
-    const secondRows: any[] = [];
-    Object.entries(secondPrize.stats)
-      .filter(([_, cat]) => cat.count > 0)
-      .sort((a, b) => b[1].count - a[1].count)
-      .forEach(([catKey, cat]) => {
-        const catPct = secondPrize.totalVotes > 0 ? Math.round((cat.count / secondPrize.totalVotes) * 100) : 0;
-        secondRows.push({
-          奖项: '二等奖',
-          大类: cat.label,
-          大类票数: cat.count,
-          大类占比: catPct + '%',
-          子类: '(大类汇总)',
-          子类票数: '',
-          子类占比: '',
-        });
-        Object.entries(cat.subs)
-          .filter(([_, sub]) => sub.count > 0)
-          .sort((a, b) => b[1].count - a[1].count)
-          .forEach(([subKey, sub]) => {
-            const subPct = cat.count > 0 ? Math.round((sub.count / cat.count) * 100) : 0;
-            secondRows.push({
-              奖项: '二等奖',
-              大类: '',
-              大类票数: '',
-              大类占比: '',
-              子类: sub.label,
-              子类票数: sub.count,
-              子类占比: subPct + '%',
-            });
-          });
-      });
     const wsSecond = XLSX.utils.json_to_sheet(secondRows);
     XLSX.utils.book_append_sheet(wb, wsSecond, '二等奖统计');
 
-    // Sheet 4: 三等奖统计
-    const thirdRows: any[] = [];
-    Object.entries(thirdPrize.stats)
-      .filter(([_, cat]) => cat.count > 0)
-      .sort((a, b) => b[1].count - a[1].count)
-      .forEach(([catKey, cat]) => {
-        const catPct = thirdPrize.totalVotes > 0 ? Math.round((cat.count / thirdPrize.totalVotes) * 100) : 0;
-        thirdRows.push({
-          奖项: '三等奖',
-          大类: cat.label,
-          大类票数: cat.count,
-          大类占比: catPct + '%',
-          子类: '(大类汇总)',
-          子类票数: '',
-          子类占比: '',
-        });
-        Object.entries(cat.subs)
-          .filter(([_, sub]) => sub.count > 0)
-          .sort((a, b) => b[1].count - a[1].count)
-          .forEach(([subKey, sub]) => {
-            const subPct = cat.count > 0 ? Math.round((sub.count / cat.count) * 100) : 0;
-            thirdRows.push({
-              奖项: '三等奖',
-              大类: '',
-              大类票数: '',
-              大类占比: '',
-              子类: sub.label,
-              子类票数: sub.count,
-              子类占比: subPct + '%',
-            });
-          });
-      });
     const wsThird = XLSX.utils.json_to_sheet(thirdRows);
     XLSX.utils.book_append_sheet(wb, wsThird, '三等奖统计');
 
-    XLSX.writeFile(wb, `年会奖品许愿统计_${new Date().toISOString().slice(0,10)}.xlsx`);
+    XLSX.writeFile(wb, `年会奖品许愿统计_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const renderPrizeCard = (title: string, color: string, prizeStats: PrizeStats) => {
@@ -257,7 +224,7 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
     const sortedCats = Object.entries(stats)
       .filter(([_, cat]) => cat.count > 0)
       .sort((a, b) => b[1].count - a[1].count);
-    
+
     return (
       <div
         style={{
@@ -282,7 +249,7 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
               const sortedSubs = Object.entries(cat.subs)
                 .filter(([_, sub]) => sub.count > 0)
                 .sort((a, b) => b[1].count - a[1].count);
-              
+
               return (
                 <div key={catKey} style={{ marginBottom: '12px' }}>
                   <div
@@ -510,9 +477,9 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
                 {submissions.map((sub, index) => (
                   <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
                     <td style={{ padding: '8px', whiteSpace: 'nowrap' }}>{sub.name || '-'}</td>
-                    <td style={{ padding: '8px' }}>{getPrizeLabel(sub.firstCat, sub.firstSub)}</td>
-                    <td style={{ padding: '8px' }}>{getPrizeLabel(sub.secondCat, sub.secondSub)}</td>
-                    <td style={{ padding: '8px' }}>{getPrizeLabel(sub.thirdCat, sub.thirdSub)}</td>
+                    <td style={{ padding: '8px' }}>{getPrizeLabel(sub.firstCat, sub.firstSub, 'first')}</td>
+                    <td style={{ padding: '8px' }}>{getPrizeLabel(sub.secondCat, sub.secondSub, 'second')}</td>
+                    <td style={{ padding: '8px' }}>{getPrizeLabel(sub.thirdCat, sub.thirdSub, 'third')}</td>
                   </tr>
                 ))}
               </tbody>

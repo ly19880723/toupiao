@@ -15,73 +15,119 @@ interface PrizeData {
   subs: { value: string; label: string }[];
 }
 
-const DEFAULT_PRIZE_DATA: Record<string, PrizeData> = {
-  electronics: {
-    label: '数码电子',
-    icon: 'camera',
-    subs: [
-      { value: 'iphone', label: 'iPhone' },
-      { value: 'ipad', label: 'iPad' },
-      { value: 'airpods', label: 'AirPods' },
-      { value: 'watch', label: '智能手表' },
-      { value: 'switch', label: '任天堂 Switch' },
-      { value: 'projector', label: '投影仪' },
-    ]
+interface GroupedPrizeData {
+  first: Record<string, PrizeData>;
+  second: Record<string, PrizeData>;
+  third: Record<string, PrizeData>;
+}
+
+const DEFAULT_PRIZE_DATA: GroupedPrizeData = {
+  first: {
+    electronics: {
+      label: '数码电子',
+      icon: 'camera',
+      subs: [
+        { value: 'iphone', label: 'iPhone' },
+        { value: 'ipad', label: 'iPad' },
+        { value: 'airpods', label: 'AirPods' },
+        { value: 'watch', label: '智能手表' },
+        { value: 'projector', label: '投影仪' },
+      ]
+    },
+    home: {
+      label: '家居生活',
+      icon: 'home',
+      subs: [
+        { value: 'robot', label: '扫地机器人' },
+        { value: 'massage', label: '按摩椅/按摩仪' },
+      ]
+    },
+    travel: {
+      label: '旅行基金',
+      icon: 'plane',
+      subs: [
+        { value: 'overseas', label: '出境游基金' },
+        { value: 'hotel', label: '星级酒店券' },
+      ]
+    },
   },
-  home: {
-    label: '家居生活',
-    icon: 'home',
-    subs: [
-      { value: 'robot', label: '扫地机器人' },
-      { value: 'coffee_machine', label: '咖啡机' },
-      { value: 'airfryer', label: '空气炸锅' },
-      { value: 'blanket', label: '蚕丝被/羽绒被' },
-      { value: 'cookware', label: '厨具套装' },
-      { value: 'massage', label: '按摩椅/按摩仪' },
-    ]
+  second: {
+    electronics: {
+      label: '数码电子',
+      icon: 'camera',
+      subs: [
+        { value: 'switch', label: '任天堂 Switch' },
+        { value: 'airpods', label: 'AirPods' },
+        { value: 'watch', label: '智能手表' },
+      ]
+    },
+    home: {
+      label: '家居生活',
+      icon: 'home',
+      subs: [
+        { value: 'coffee_machine', label: '咖啡机' },
+        { value: 'airfryer', label: '空气炸锅' },
+        { value: 'blanket', label: '蚕丝被/羽绒被' },
+        { value: 'cookware', label: '厨具套装' },
+      ]
+    },
+    food: {
+      label: '食品礼盒',
+      icon: 'coffee',
+      subs: [
+        { value: 'snack', label: '零食大礼包' },
+        { value: 'tea', label: '茶叶礼盒' },
+        { value: 'wine', label: '酒水/红酒' },
+        { value: 'seafood', label: '海鲜礼盒' },
+      ]
+    },
+    sport: {
+      label: '运动健身',
+      icon: 'trophy',
+      subs: [
+        { value: 'fascia', label: '筋膜枪' },
+        { value: 'treadmill', label: '家用跑步机' },
+        { value: 'skateboard', label: '滑板/陆冲板' },
+      ]
+    },
   },
-  food: {
-    label: '食品礼盒',
-    icon: 'coffee',
-    subs: [
-      { value: 'snack', label: '零食大礼包' },
-      { value: 'tea', label: '茶叶礼盒' },
-      { value: 'wine', label: '酒水/红酒' },
-      { value: 'seafood', label: '海鲜礼盒' },
-      { value: 'fruit', label: '进口水果礼盒' },
-    ]
-  },
-  sport: {
-    label: '运动健身',
-    icon: 'trophy',
-    subs: [
-      { value: 'fascia', label: '筋膜枪' },
-      { value: 'yoga', label: '瑜伽套装' },
-      { value: 'dumbbell', label: '家用哑铃套装' },
-      { value: 'treadmill', label: '家用跑步机' },
-      { value: 'skateboard', label: '滑板/陆冲板' },
-    ]
-  },
-  travel: {
-    label: '旅行基金',
-    icon: 'plane',
-    subs: [
-      { value: 'domestic', label: '国内短途游' },
-      { value: 'overseas', label: '出境游基金' },
-      { value: 'hotel', label: '星级酒店券' },
-      { value: 'camping', label: '露营装备套装' },
-    ]
-  },
-  shopping: {
-    label: '购物卡券',
-    icon: 'cart',
-    subs: [
-      { value: 'jd', label: '京东卡' },
-      { value: 'tmall', label: '天猫超市卡' },
-      { value: 'gas', label: '加油卡' },
-      { value: 'starbucks', label: '星巴克/咖啡券' },
-      { value: 'cinema', label: '电影卡' },
-    ]
+  third: {
+    food: {
+      label: '食品礼盒',
+      icon: 'coffee',
+      subs: [
+        { value: 'fruit', label: '进口水果礼盒' },
+        { value: 'snack', label: '零食大礼包' },
+      ]
+    },
+    sport: {
+      label: '运动健身',
+      icon: 'trophy',
+      subs: [
+        { value: 'yoga', label: '瑜伽套装' },
+        { value: 'dumbbell', label: '家用哑铃套装' },
+        { value: 'fascia', label: '筋膜枪' },
+      ]
+    },
+    travel: {
+      label: '旅行基金',
+      icon: 'plane',
+      subs: [
+        { value: 'domestic', label: '国内短途游' },
+        { value: 'camping', label: '露营装备套装' },
+      ]
+    },
+    shopping: {
+      label: '购物卡券',
+      icon: 'cart',
+      subs: [
+        { value: 'jd', label: '京东卡' },
+        { value: 'tmall', label: '天猫超市卡' },
+        { value: 'gas', label: '加油卡' },
+        { value: 'starbucks', label: '星巴克/咖啡券' },
+        { value: 'cinema', label: '电影卡' },
+      ]
+    },
   },
 };
 
@@ -90,10 +136,13 @@ export default function Home() {
   const [suggestions, setSuggestions] = useState('');
   const [firstCat, setFirstCat] = useState('');
   const [firstSub, setFirstSub] = useState('');
+  const [firstOther, setFirstOther] = useState('');
   const [secondCat, setSecondCat] = useState('');
   const [secondSub, setSecondSub] = useState('');
+  const [secondOther, setSecondOther] = useState('');
   const [thirdCat, setThirdCat] = useState('');
   const [thirdSub, setThirdSub] = useState('');
+  const [thirdOther, setThirdOther] = useState('');
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -103,7 +152,7 @@ export default function Home() {
   const [authMode, setAuthMode] = useState<string | null>(null);
   const [pwdInput, setPwdInput] = useState('');
   const [pwdError, setPwdError] = useState('');
-  const [prizeData, setPrizeData] = useState<Record<string, PrizeData>>(DEFAULT_PRIZE_DATA);
+  const [prizeData, setPrizeData] = useState<GroupedPrizeData>(DEFAULT_PRIZE_DATA);
   const [prizeLoaded, setPrizeLoaded] = useState(false);
 
   // Load prize data from API (cloud first, fallback to default only on error)
@@ -114,34 +163,31 @@ export default function Home() {
         // Use cloud data if available (even if empty), only fall back to default on error
         if (result && typeof result.data === 'object') {
           setPrizeData(result.data);
-        } else if (result && typeof result.error === 'string') {
-          // API returned error, keep default data
         }
         setPrizeLoaded(true);
       })
       .catch(() => {
-        // Network error, keep default data
         setPrizeLoaded(true);
       });
   }, []);
 
-  const fields = [name.trim(), firstCat && firstSub, secondCat && secondSub, thirdCat && thirdSub];
+  const fields = [name.trim(), firstCat && (firstSub === '__other__' ? firstOther.trim() : firstSub), secondCat && (secondSub === '__other__' ? secondOther.trim() : secondSub), thirdCat && (thirdSub === '__other__' ? thirdOther.trim() : thirdSub)];
   const filled = fields.filter(Boolean).length;
   const progress = Math.round((filled / 4) * 100);
 
   const validate = () => {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = '请填写姓名';
-    if (!firstCat || !firstSub) errs.first = '请选择一等奖的奖品类别和具体奖品';
-    if (!secondCat || !secondSub) errs.second = '请选择二等奖的奖品类别和具体奖品';
-    if (!thirdCat || !thirdSub) errs.third = '请选择三等奖的奖品类别和具体奖品';
+    if (!firstCat || (!firstSub && firstSub !== '__other__') || (firstSub === '__other__' && !firstOther.trim())) errs.first = '请选择或填写一等奖的奖品';
+    if (!secondCat || (!secondSub && secondSub !== '__other__') || (secondSub === '__other__' && !secondOther.trim())) errs.second = '请选择或填写二等奖的奖品';
+    if (!thirdCat || (!thirdSub && thirdSub !== '__other__') || (thirdSub === '__other__' && !thirdOther.trim())) errs.third = '请选择或填写三等奖的奖品';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = () => {
     if (!validate()) {
-          Notification.warning({ message: '许愿未填写完整', description: '请检查标红的必填项' });
+      Notification.warning({ message: '许愿未填写完整', description: '请检查标红的必填项' });
       return;
     }
     setShowConfirm(true);
@@ -150,15 +196,15 @@ export default function Home() {
   const doSubmit = async () => {
     setShowConfirm(false);
     setSubmitting(true);
-    
+
     const record = {
       name: name.trim(),
       firstCat,
-      firstSub,
+      firstSub: firstSub === '__other__' ? `__OTHER__:${firstOther.trim()}` : firstSub,
       secondCat,
-      secondSub,
+      secondSub: secondSub === '__other__' ? `__OTHER__:${secondOther.trim()}` : secondSub,
       thirdCat,
-      thirdSub,
+      thirdSub: thirdSub === '__other__' ? `__OTHER__:${thirdOther.trim()}` : thirdSub,
       suggestions: suggestions.trim(),
     };
 
@@ -168,9 +214,9 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(record),
       });
-      
+
       if (!res.ok) throw new Error('提交失败');
-      
+
       setSubmitting(false);
       setSubmitted(true);
       Notification.success({
@@ -186,16 +232,24 @@ export default function Home() {
 
   const resetForm = () => {
     setName(''); setSuggestions('');
-    setFirstCat(''); setFirstSub(''); setSecondCat(''); setSecondSub('');
-    setThirdCat(''); setThirdSub('');
+    setFirstCat(''); setFirstSub(''); setFirstOther('');
+    setSecondCat(''); setSecondSub(''); setSecondOther('');
+    setThirdCat(''); setThirdSub(''); setThirdOther('');
     setErrors({}); setSubmitted(false);
   };
 
-  const getPrizeLabel = (cat: string, sub: string) => {
+  const getPrizeLabel = (cat: string, sub: string, level: 'first' | 'second' | 'third') => {
     if (!cat || !sub) return '未选';
-    const c = prizeData[cat];
-    const s = c?.subs?.find(s => s.value === sub);
-    return (c?.label || cat) + ' - ' + (s?.label || sub);
+    const group = prizeData[level];
+    const c = group?.[cat];
+    if (!c) return `${cat} - ${sub}`;
+    // Check if sub is a custom __OTHER__ value
+    if (sub.startsWith('__OTHER__:')) {
+      const customText = sub.replace('__OTHER__:', '');
+      return `${c.label} - ${customText} (自定义)`;
+    }
+    const s = c.subs?.find(s => s.value === sub);
+    return (c.label || cat) + ' - ' + (s?.label || sub);
   };
 
   const handleAuth = async () => {
@@ -206,7 +260,7 @@ export default function Home() {
         body: JSON.stringify({ password: pwdInput }),
       });
       const result = await res.json();
-      
+
       if (result.valid) {
         if (authMode === 'admin') setShowAdmin(true);
         else setShowStats(true);
@@ -221,22 +275,80 @@ export default function Home() {
     }
   };
 
-  const handleSavePrizes = async (newData: Record<string, PrizeData>) => {
+  const handleSavePrizes = async (newData: GroupedPrizeData) => {
     try {
       const res = await fetch('/api/prizes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: newData }),
+        body: JSON.stringify(newData),
       });
-      
+
       if (!res.ok) throw new Error('保存失败');
-      
+
       setPrizeData(newData);
       setShowAdmin(false);
       Notification.success({ message: '奖品数据已保存' });
     } catch (e) {
       Notification.error({ message: '保存失败', description: '请稍后重试' });
     }
+  };
+
+  const renderPrizeSelect = (
+    level: 'first' | 'second' | 'third',
+    cat: string, setCat: (v: string) => void,
+    sub: string, setSub: (v: string) => void,
+    other: string, setOther: (v: string) => void,
+    errorKey: string,
+    label: string
+  ) => {
+    const group = prizeData[level] || {};
+    const catOptions = Object.entries(group).map(([k, p]) => ({ value: k, label: p.label }));
+    const currentSubs = cat && group[cat] ? group[cat].subs : [];
+    const isOther = sub === '__other__';
+
+    return (
+      <div className="form-item" style={{ marginBottom: 0 }}>
+        <label className="form-label">{label}<span className="required">*</span></label>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: '120px' }}>
+            <Select
+              value={cat}
+              onChange={(v: string) => { setCat(v); setSub(''); setOther(''); }}
+              options={[{ value: '', label: '选择大类...' }, ...catOptions]} />
+          </div>
+          {cat && (
+            <>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                {!isOther ? (
+                  <Select
+                    value={sub}
+                    onChange={(v: string) => { setSub(v); if (v !== '__other__') setOther(''); }}
+                    options={[
+                      { value: '', label: '选择子类...' },
+                      ...currentSubs.map(s => ({ value: s.value, label: s.label })),
+                      { value: '__other__', label: '其他...' }
+                    ]} />
+                ) : (
+                  <Input
+                    value={other}
+                    onChange={(e: any) => setOther(e.target.value)}
+                    placeholder="请输入自定义奖品"
+                    allowClear />
+                )}
+              </div>
+              {isOther && (
+                <div style={{ flex: '0 0 100%', marginTop: '-4px' }}>
+                  <Button size="small" onClick={() => { setSub(''); setOther(''); }}>
+                    返回选择列表
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        {errors[errorKey] && <div className="form-error-msg">{errors[errorKey]}</div>}
+      </div>
+    );
   };
 
   if (submitted) {
@@ -255,15 +367,15 @@ export default function Home() {
             </div>
             <div style={{ marginBottom: '10px' }}>
               <Tag color="yellow">一等奖</Tag>
-              <span style={{ marginLeft: '8px' }}>{getPrizeLabel(firstCat, firstSub)}</span>
+              <span style={{ marginLeft: '8px' }}>{getPrizeLabel(firstCat, firstSub, 'first')}</span>
             </div>
             <div style={{ marginBottom: '10px' }}>
               <Tag color="yellow">二等奖</Tag>
-              <span style={{ marginLeft: '8px' }}>{getPrizeLabel(secondCat, secondSub)}</span>
+              <span style={{ marginLeft: '8px' }}>{getPrizeLabel(secondCat, secondSub, 'second')}</span>
             </div>
             <div style={{ marginBottom: '10px' }}>
               <Tag color="yellow">三等奖</Tag>
-              <span style={{ marginLeft: '8px' }}>{getPrizeLabel(thirdCat, thirdSub)}</span>
+              <span style={{ marginLeft: '8px' }}>{getPrizeLabel(thirdCat, thirdSub, 'third')}</span>
             </div>
             {suggestions && (
               <div style={{ marginBottom: '10px' }}>
@@ -282,9 +394,7 @@ export default function Home() {
     );
   }
 
-  const summaryText = `姓名：${name}；一等奖：${getPrizeLabel(firstCat, firstSub)}；二等奖：${getPrizeLabel(secondCat, secondSub)}；三等奖：${getPrizeLabel(thirdCat, thirdSub)}。`;
-
-  const prizeOptions = Object.entries(prizeData).map(([k, p]) => ({ value: k, label: p.label }));
+  const summaryText = `姓名：${name}；一等奖：${getPrizeLabel(firstCat, firstSub, 'first')}；二等奖：${getPrizeLabel(secondCat, secondSub, 'second')}；三等奖：${getPrizeLabel(thirdCat, thirdSub, 'third')}。`;
 
   return (
     <>
@@ -309,7 +419,7 @@ export default function Home() {
           <Divider type="dashed-teal" />
           <div className="form-item" style={{ marginBottom: 0 }}>
             <label className="form-label">姓名<span className="required">*</span></label>
-            <Input value={name} onChange={(e: any) => { setName(e.target.value); if (errors.name) setErrors({...errors, name: undefined}); }}
+            <Input value={name} onChange={(e: any) => { setName(e.target.value); if (errors.name) setErrors({ ...errors, name: undefined }); }}
               placeholder="请输入你的姓名" allowClear
               status={errors.name ? 'error' : undefined} />
             {errors.name && <div className="form-error-msg">{errors.name}</div>}
@@ -322,58 +432,17 @@ export default function Home() {
           <Divider type="dashed-teal" />
 
           {/* 一等奖 */}
-          <div className="form-item">
-            <label className="form-label">一等奖（期望）<span className="required">*</span></label>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <div style={{ flex: 1 }}>
-                <Select value={firstCat}
-                  onChange={(v: string) => { setFirstCat(v); setFirstSub(''); }}
-                  options={[{value:'',label:'选择大类...'}, ...prizeOptions]} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <Select value={firstSub}
-                  onChange={(v: string) => setFirstSub(v)}
-                  options={[{value:'',label:'选择子类...'}, ...(firstCat && prizeData[firstCat] ? prizeData[firstCat].subs.map(s=>({value:s.value,label:s.label})) : [])]} />
-              </div>
-            </div>
-            {errors.first && <div className="form-error-msg">{errors.first}</div>}
-          </div>
+          {renderPrizeSelect('first', firstCat, setFirstCat, firstSub, setFirstSub, firstOther, setFirstOther, 'first', '一等奖（期望）')}
+
+          <Divider type="dashed" style={{ margin: '16px 0' }} />
 
           {/* 二等奖 */}
-          <div className="form-item">
-            <label className="form-label">二等奖（期望）<span className="required">*</span></label>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <div style={{ flex: 1 }}>
-                <Select value={secondCat}
-                  onChange={(v: string) => { setSecondCat(v); setSecondSub(''); }}
-                  options={[{value:'',label:'选择大类...'}, ...prizeOptions]} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <Select value={secondSub}
-                  onChange={(v: string) => setSecondSub(v)}
-                  options={[{value:'',label:'选择子类...'}, ...(secondCat && prizeData[secondCat] ? prizeData[secondCat].subs.map(s=>({value:s.value,label:s.label})) : [])]} />
-              </div>
-            </div>
-            {errors.second && <div className="form-error-msg">{errors.second}</div>}
-          </div>
+          {renderPrizeSelect('second', secondCat, setSecondCat, secondSub, setSecondSub, secondOther, setSecondOther, 'second', '二等奖（期望）')}
+
+          <Divider type="dashed" style={{ margin: '16px 0' }} />
 
           {/* 三等奖 */}
-          <div className="form-item" style={{ marginBottom: 0 }}>
-            <label className="form-label">三等奖（期望）<span className="required">*</span></label>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <div style={{ flex: 1 }}>
-                <Select value={thirdCat}
-                  onChange={(v: string) => { setThirdCat(v); setThirdSub(''); }}
-                  options={[{value:'',label:'选择大类...'}, ...prizeOptions]} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <Select value={thirdSub}
-                  onChange={(v: string) => setThirdSub(v)}
-                  options={[{value:'',label:'选择子类...'}, ...(thirdCat && prizeData[thirdCat] ? prizeData[thirdCat].subs.map(s=>({value:s.value,label:s.label})) : [])]} />
-              </div>
-            </div>
-            {errors.third && <div className="form-error-msg">{errors.third}</div>}
-          </div>
+          {renderPrizeSelect('third', thirdCat, setThirdCat, thirdSub, setThirdSub, thirdOther, setThirdOther, 'third', '三等奖（期望）')}
         </div>
 
         {/* Suggestions */}

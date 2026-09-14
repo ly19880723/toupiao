@@ -8,20 +8,27 @@ export async function GET() {
     const prizes = await prisma.prizeData.findMany({
       orderBy: { sortOrder: 'asc' }
     });
-    
-    const prizeMap: Record<string, { label: string; icon: string; subs: { value: string; label: string }[] }> = {};
+
+    const result: Record<string, Record<string, { label: string; icon: string; subs: { value: string; label: string }[] }>> = {
+      first: {},
+      second: {},
+      third: {},
+    };
+
     prizes.forEach(p => {
-      prizeMap[p.key] = {
+      const level = p.level;
+      if (!result[level]) result[level] = {};
+      result[level][p.key] = {
         label: p.label,
         icon: p.icon,
         subs: Array.isArray(p.subs) ? (p.subs as any[]) : []
       };
     });
-    
-    return NextResponse.json({ data: prizeMap });
+
+    return NextResponse.json({ data: result });
   } catch (error: any) {
     console.error('Fetch prizes error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: '查询失败',
       detail: error?.message || String(error)
     }, { status: 500 });
@@ -31,30 +38,36 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { data } = body;
+    const { first, second, third } = body;
 
-    // 1. 先清空数据库，确保保存后云端数据与前端完全一致
-    await prisma.prizeData.deleteMany();
+    // 按奖项级别分别处理
+    const levels: Record<string, any> = { first, second, third };
 
-    // 2. 重新写入前端传来的数据
-    const entries = Object.entries(data);
-    for (let i = 0; i < entries.length; i++) {
-      const [key, value] = entries[i] as [string, any];
-      await prisma.prizeData.create({
-        data: {
-          key,
-          label: value.label,
-          icon: value.icon || 'star',
-          subs: value.subs || [],
-          sortOrder: i
-        }
-      });
+    for (const [level, data] of Object.entries(levels)) {
+      // 1. 先清空该奖项级别的数据
+      await prisma.prizeData.deleteMany({ where: { level } });
+
+      // 2. 重新写入
+      const entries = Object.entries(data || {});
+      for (let i = 0; i < entries.length; i++) {
+        const [key, value] = entries[i] as [string, any];
+        await prisma.prizeData.create({
+          data: {
+            key,
+            level,
+            label: value.label,
+            icon: value.icon || 'star',
+            subs: value.subs || [],
+            sortOrder: i
+          }
+        });
+      }
     }
 
-    return NextResponse.json({ success: true, count: entries.length });
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Save prizes error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: '保存失败',
       detail: error?.message || String(error)
     }, { status: 500 });
