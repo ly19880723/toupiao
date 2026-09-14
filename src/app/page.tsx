@@ -135,7 +135,7 @@ export default function Home() {
 
   const handleSubmit = () => {
     if (!validate()) {
-      Notification.warning({ message: '问卷未填写完整', description: '请检查标红的必填项' });
+          Notification.warning({ message: '许愿未填写完整', description: '请检查标红的必填项' });
       return;
     }
     setShowConfirm(true);
@@ -168,8 +168,8 @@ export default function Home() {
       setSubmitting(false);
       setSubmitted(true);
       Notification.success({
-        message: '问卷提交成功！',
-        description: '感谢你的参与，祝你年会上好运连连！',
+        message: '许愿提交成功！',
+        description: '你的心愿已送达，祝年会好运！',
         duration: 5,
       });
     } catch (e) {
@@ -238,10 +238,10 @@ export default function Home() {
       <>
         <NotificationContainer />
         <div className="page-wrapper" style={{ textAlign: 'center', paddingTop: '120px' }}>
-          <Title size="large" color="app-yellow">{'提交成功'}</Title>
+          <Title size="large" color="app-yellow">{'许愿成功'}</Title>
           <div className="card" style={{ marginTop: '32px', textAlign: 'left' }}>
             <p style={{ fontSize: '16px', marginBottom: '16px' }}>
-              感谢你的参与！以下是你的问卷摘要：
+              你的心愿已收到！以下是许愿摘要：
             </p>
             <div style={{ marginBottom: '10px' }}>
               <Tag color="teal">姓名</Tag>
@@ -286,9 +286,9 @@ export default function Home() {
       <div className="page-wrapper">
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <Title size="large">{'年会奖品意向问卷'}</Title>
+          <Title size="large">{'年会奖品许愿'}</Title>
           <p className="section-intro" style={{ marginTop: '12px' }}>
-            年终岁末，为了让大家抽到真正心仪的奖品，请花 2 分钟告诉我们你的想法～
+            年终岁末，为了让心愿照进现实，请花 2 分钟许下你最想要的年会奖品～
           </p>
         </div>
 
@@ -389,7 +389,7 @@ export default function Home() {
         <div style={{ textAlign: 'center', marginTop: '32px' }}>
           <Button type="primary" size="large" block loading={submitting}
             onClick={handleSubmit} disabled={submitting || !prizeLoaded}>
-            {submitting ? '提交中...' : !prizeLoaded ? '加载中...' : '提交问卷'}
+            {!prizeLoaded ? '加载中...' : '提交许愿'}
           </Button>
           <p style={{ marginTop: '12px', fontSize: '13px', color: 'var(--animal-text-muted)' }}>
             提交后将无法修改，请确认信息无误

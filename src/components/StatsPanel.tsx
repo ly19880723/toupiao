@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { Button } from './animal-ui';
+import * as XLSX from 'xlsx';
 
 interface PrizeData {
   label: string;
@@ -115,6 +117,140 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
   const firstPrize = useMemo(() => calculateStats('firstCat', 'firstSub'), [submissions, prizeData]);
   const secondPrize = useMemo(() => calculateStats('secondCat', 'secondSub'), [submissions, prizeData]);
   const thirdPrize = useMemo(() => calculateStats('thirdCat', 'thirdSub'), [submissions, prizeData]);
+
+  const getPrizeLabel = (catValue: string, subValue: string) => {
+    const cat = prizeData[catValue];
+    if (!cat) return catValue || '-';
+    const sub = cat.subs.find(s => s.value === subValue);
+    return `${cat.label}${sub ? ` - ${sub.label}` : ''}`;
+  };
+
+  // 导出完整统计 Excel
+  const exportExcel = () => {
+    if (submissions.length === 0) return;
+
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1: 提交名单
+    const records = submissions.map((sub, idx) => ({
+      序号: idx + 1,
+      姓名: sub.name || '-',
+      一等奖: getPrizeLabel(sub.firstCat, sub.firstSub),
+      二等奖: getPrizeLabel(sub.secondCat, sub.secondSub),
+      三等奖: getPrizeLabel(sub.thirdCat, sub.thirdSub),
+      建议: sub.suggestions || '-',
+      提交时间: sub.createdAt ? new Date(sub.createdAt).toLocaleString('zh-CN') : '-',
+    }));
+    const wsRecords = XLSX.utils.json_to_sheet(records);
+    XLSX.utils.book_append_sheet(wb, wsRecords, '提交名单');
+
+    // Sheet 2: 一等奖统计
+    const firstRows: any[] = [];
+    Object.entries(firstPrize.stats)
+      .filter(([_, cat]) => cat.count > 0)
+      .sort((a, b) => b[1].count - a[1].count)
+      .forEach(([catKey, cat]) => {
+        const catPct = firstPrize.totalVotes > 0 ? Math.round((cat.count / firstPrize.totalVotes) * 100) : 0;
+        firstRows.push({
+          奖项: '一等奖',
+          大类: cat.label,
+          大类票数: cat.count,
+          大类占比: catPct + '%',
+          子类: '(大类汇总)',
+          子类票数: '',
+          子类占比: '',
+        });
+        Object.entries(cat.subs)
+          .filter(([_, sub]) => sub.count > 0)
+          .sort((a, b) => b[1].count - a[1].count)
+          .forEach(([subKey, sub]) => {
+            const subPct = cat.count > 0 ? Math.round((sub.count / cat.count) * 100) : 0;
+            firstRows.push({
+              奖项: '一等奖',
+              大类: '',
+              大类票数: '',
+              大类占比: '',
+              子类: sub.label,
+              子类票数: sub.count,
+              子类占比: subPct + '%',
+            });
+          });
+      });
+    const wsFirst = XLSX.utils.json_to_sheet(firstRows);
+    XLSX.utils.book_append_sheet(wb, wsFirst, '一等奖统计');
+
+    // Sheet 3: 二等奖统计
+    const secondRows: any[] = [];
+    Object.entries(secondPrize.stats)
+      .filter(([_, cat]) => cat.count > 0)
+      .sort((a, b) => b[1].count - a[1].count)
+      .forEach(([catKey, cat]) => {
+        const catPct = secondPrize.totalVotes > 0 ? Math.round((cat.count / secondPrize.totalVotes) * 100) : 0;
+        secondRows.push({
+          奖项: '二等奖',
+          大类: cat.label,
+          大类票数: cat.count,
+          大类占比: catPct + '%',
+          子类: '(大类汇总)',
+          子类票数: '',
+          子类占比: '',
+        });
+        Object.entries(cat.subs)
+          .filter(([_, sub]) => sub.count > 0)
+          .sort((a, b) => b[1].count - a[1].count)
+          .forEach(([subKey, sub]) => {
+            const subPct = cat.count > 0 ? Math.round((sub.count / cat.count) * 100) : 0;
+            secondRows.push({
+              奖项: '二等奖',
+              大类: '',
+              大类票数: '',
+              大类占比: '',
+              子类: sub.label,
+              子类票数: sub.count,
+              子类占比: subPct + '%',
+            });
+          });
+      });
+    const wsSecond = XLSX.utils.json_to_sheet(secondRows);
+    XLSX.utils.book_append_sheet(wb, wsSecond, '二等奖统计');
+
+    // Sheet 4: 三等奖统计
+    const thirdRows: any[] = [];
+    Object.entries(thirdPrize.stats)
+      .filter(([_, cat]) => cat.count > 0)
+      .sort((a, b) => b[1].count - a[1].count)
+      .forEach(([catKey, cat]) => {
+        const catPct = thirdPrize.totalVotes > 0 ? Math.round((cat.count / thirdPrize.totalVotes) * 100) : 0;
+        thirdRows.push({
+          奖项: '三等奖',
+          大类: cat.label,
+          大类票数: cat.count,
+          大类占比: catPct + '%',
+          子类: '(大类汇总)',
+          子类票数: '',
+          子类占比: '',
+        });
+        Object.entries(cat.subs)
+          .filter(([_, sub]) => sub.count > 0)
+          .sort((a, b) => b[1].count - a[1].count)
+          .forEach(([subKey, sub]) => {
+            const subPct = cat.count > 0 ? Math.round((sub.count / cat.count) * 100) : 0;
+            thirdRows.push({
+              奖项: '三等奖',
+              大类: '',
+              大类票数: '',
+              大类占比: '',
+              子类: sub.label,
+              子类票数: sub.count,
+              子类占比: subPct + '%',
+            });
+          });
+      });
+    const wsThird = XLSX.utils.json_to_sheet(thirdRows);
+    XLSX.utils.book_append_sheet(wb, wsThird, '三等奖统计');
+
+    XLSX.writeFile(wb, `年会奖品许愿统计_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
 
   const renderPrizeCard = (title: string, color: string, prizeStats: PrizeStats) => {
     const { stats, totalVotes } = prizeStats;
@@ -298,13 +434,6 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
     );
   };
 
-  const getPrizeLabel = (catValue: string, subValue: string) => {
-    const cat = prizeData[catValue];
-    if (!cat) return catValue || '-';
-    const sub = cat.subs.find(s => s.value === subValue);
-    return `${cat.label}${sub ? ` - ${sub.label}` : ''}`;
-  };
-
   if (loading) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: 'var(--animal-text-muted)' }}>
@@ -326,6 +455,13 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
 
   return (
     <div style={{ padding: '16px', maxWidth: '800px', margin: '0 auto' }}>
+      {/* 导出按钮 */}
+      <div style={{ textAlign: 'right', marginBottom: '12px' }}>
+        <Button size="small" onClick={exportExcel} disabled={submissions.length === 0}>
+          导出完整统计
+        </Button>
+      </div>
+
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <span style={{ fontSize: '28px', fontWeight: '900', color: 'var(--animal-primary-active)' }}>
           {submissions.length}
