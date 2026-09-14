@@ -31,18 +31,34 @@ interface PrizeStats {
 export default function StatsPanel({ prizeData }: StatsPanelProps) {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
+    setLoading(true);
+    setError('');
     fetch('/api/stats')
-      .then(res => res.json())
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`HTTP ${res.status}: ${text}`);
+        }
+        return res.json();
+      })
       .then(result => {
+        console.log('Stats API response:', result);
         const data = Array.isArray(result) ? result : (result?.results || result?.data);
         if (Array.isArray(data)) {
           setSubmissions(data);
+        } else {
+          setError('返回数据格式异常');
         }
+        setLoading(false);
       })
       .catch(err => {
         console.error('Failed to fetch stats:', err);
+        setError('获取数据失败: ' + err.message);
+        setLoading(false);
       });
   }, []);
 
@@ -56,6 +72,7 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
     const stats: Record<string, CategoryStat> = {};
     let totalVotes = 0;
 
+    // Initialize with all known categories from prizeData
     Object.keys(prizeData).forEach(key => {
       stats[key] = {
         label: prizeData[key].label,
@@ -70,12 +87,25 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
     submissions.forEach((sub: any) => {
       const catValue = sub[catKey] as string;
       const subValue = sub[subKey] as string;
-      if (stats[catValue]) {
-        stats[catValue].count++;
-        totalVotes++;
-        if (stats[catValue].subs[subValue]) {
-          stats[catValue].subs[subValue].count++;
+      if (!catValue) return;
+      
+      // If category doesn't exist in prizeData, create it dynamically
+      if (!stats[catValue]) {
+        stats[catValue] = {
+          label: catValue,
+          count: 0,
+          subs: {},
+        };
+      }
+      
+      stats[catValue].count++;
+      totalVotes++;
+      
+      if (subValue) {
+        if (!stats[catValue].subs[subValue]) {
+          stats[catValue].subs[subValue] = { label: subValue, count: 0 };
         }
+        stats[catValue].subs[subValue].count++;
       }
     });
 
@@ -88,6 +118,10 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
 
   const renderPrizeCard = (title: string, color: string, prizeStats: PrizeStats) => {
     const { stats, totalVotes } = prizeStats;
+    const sortedCats = Object.entries(stats)
+      .filter(([_, cat]) => cat.count > 0)
+      .sort((a, b) => b[1].count - a[1].count);
+    
     return (
       <div
         style={{
@@ -98,17 +132,21 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
           marginBottom: '16px',
         }}
       >
-        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: color }}>
-          {title}
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0, fontSize: '18px', color: color }}>{title}</h3>
+          <span style={{ fontSize: '14px', color: 'var(--animal-text-muted)' }}>共 {totalVotes} 票</span>
+        </div>
         {totalVotes === 0 ? (
-          <p style={{ fontSize: '14px', color: '#999' }}>暂无投票数据</p>
+          <p style={{ fontSize: '14px', color: '#999', margin: 0 }}>暂无投票数据</p>
         ) : (
           <div>
-            {Object.keys(stats).map(catKey => {
-              const cat = stats[catKey];
+            {sortedCats.map(([catKey, cat]) => {
               const percentage = totalVotes > 0 ? Math.floor((cat.count / totalVotes) * 100) : 0;
               const isExpanded = expanded.includes(`${title}-${catKey}`);
+              const sortedSubs = Object.entries(cat.subs)
+                .filter(([_, sub]) => sub.count > 0)
+                .sort((a, b) => b[1].count - a[1].count);
+              
               return (
                 <div key={catKey} style={{ marginBottom: '12px' }}>
                   <div
@@ -186,10 +224,9 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
                     </span>
                   </div>
 
-                  {isExpanded && (
+                  {isExpanded && sortedSubs.length > 0 && (
                     <div style={{ paddingLeft: '16px' }}>
-                      {Object.keys(cat.subs).map(subKey => {
-                        const sub = cat.subs[subKey];
+                      {sortedSubs.map(([subKey, sub]) => {
                         const subPercentage = cat.count > 0 ? Math.floor((sub.count / cat.count) * 100) : 0;
                         return (
                           <div
@@ -268,8 +305,34 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
     return `${cat.label}${sub ? ` - ${sub.label}` : ''}`;
   };
 
+  if (loading) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--animal-text-muted)' }}>
+        加载中...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <p style={{ color: '#d4602f', marginBottom: '16px' }}>{error}</p>
+        <p style={{ fontSize: '14px', color: 'var(--animal-text-muted)' }}>
+          提交总数: {submissions.length}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: '16px', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <span style={{ fontSize: '28px', fontWeight: '900', color: 'var(--animal-primary-active)' }}>
+          {submissions.length}
+        </span>
+        <span style={{ fontSize: '14px', color: 'var(--animal-text-muted)', marginLeft: '6px' }}>份问卷</span>
+      </div>
+
       {renderPrizeCard('一等奖投票分布', '#c49a2e', firstPrize)}
       {renderPrizeCard('二等奖投票分布', '#5a9e8a', secondPrize)}
       {renderPrizeCard('三等奖投票分布', '#8f6a4e', thirdPrize)}
