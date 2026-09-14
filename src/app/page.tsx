@@ -106,17 +106,23 @@ export default function Home() {
   const [prizeData, setPrizeData] = useState<Record<string, PrizeData>>(DEFAULT_PRIZE_DATA);
   const [prizeLoaded, setPrizeLoaded] = useState(false);
 
-  // Load prize data from API
+  // Load prize data from API (cloud first, fallback to default only on error)
   useEffect(() => {
     fetch('/api/prizes')
       .then(res => res.json())
       .then(result => {
-        if (result.data && Object.keys(result.data).length > 0) {
+        // Use cloud data if available (even if empty), only fall back to default on error
+        if (result && typeof result.data === 'object') {
           setPrizeData(result.data);
+        } else if (result && typeof result.error === 'string') {
+          // API returned error, keep default data
         }
         setPrizeLoaded(true);
       })
-      .catch(() => setPrizeLoaded(true));
+      .catch(() => {
+        // Network error, keep default data
+        setPrizeLoaded(true);
+      });
   }, []);
 
   const fields = [name.trim(), firstCat && firstSub, secondCat && secondSub, thirdCat && thirdSub];
@@ -438,17 +444,21 @@ export default function Home() {
       <Modal open={showAdmin} title="管理奖品"
         onClose={() => setShowAdmin(false)}
         footer={null}>
-        <PrizeAdmin
-          data={prizeData}
-          onSave={handleSavePrizes}
-          onClose={() => setShowAdmin(false)} />
+        <div style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'hidden' }}>
+          <PrizeAdmin
+            data={prizeData}
+            onSave={handleSavePrizes}
+            onClose={() => setShowAdmin(false)} />
+        </div>
       </Modal>
 
       {/* Stats Modal */}
       <Modal open={showStats} title="统计结果"
         onClose={() => setShowStats(false)}
         footer={null}>
-        <StatsPanel prizeData={prizeData} />
+        <div style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'hidden' }}>
+          <StatsPanel prizeData={prizeData} />
+        </div>
       </Modal>
     </>
   );
