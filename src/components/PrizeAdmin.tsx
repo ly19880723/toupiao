@@ -83,20 +83,40 @@ export function PrizeAdmin({ data, onSave, onClose }: PrizeAdminProps) {
     setConfirmDelete(null);
   };
 
-  // 下载导入模板（当前奖项级别）
+  // 下载导入模板（包含全部四个奖项示例）
   const downloadTemplate = () => {
     const templateData = [
-      { 奖项: LEVEL_LABELS[activeTab], 大类: '数码电子', 子类: 'iPhone' },
-      { 奖项: LEVEL_LABELS[activeTab], 大类: '数码电子', 子类: 'iPad' },
-      { 奖项: LEVEL_LABELS[activeTab], 大类: '家居生活', 子类: '扫地机器人' },
+      { 奖项: '一等奖', 大类: '数码电子', 子类: 'iPhone' },
+      { 奖项: '一等奖', 大类: '数码电子', 子类: 'iPad' },
+      { 奖项: '一等奖', 大类: '家居生活', 子类: '扫地机器人' },
+      { 奖项: '二等奖', 大类: '数码电子', 子类: '任天堂 Switch' },
+      { 奖项: '二等奖', 大类: '家居生活', 子类: '咖啡机' },
+      { 奖项: '三等奖', 大类: '数码电子', 子类: '蓝牙耳机' },
+      { 奖项: '三等奖', 大类: '购物卡券', 子类: '京东卡' },
+      { 奖项: '四等奖', 大类: '购物卡券', 子类: '天猫超市卡' },
+      { 奖项: '四等奖', 大类: '生活日用', 子类: '保温杯' },
     ];
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '奖品模板');
-    XLSX.writeFile(wb, `${LEVEL_LABELS[activeTab]}导入模板.xlsx`);
+    XLSX.writeFile(wb, '奖品导入模板.xlsx');
   };
 
-  // 处理文件导入（仅导入当前选中奖项）
+  // 奖项文本 → level key 的映射
+  const resolveLevel = (label: string): 'first' | 'second' | 'third' | 'fourth' => {
+    const lower = label.trim().toLowerCase();
+    if (lower.includes('一') || lower === 'first' || lower === '1') return 'first';
+    if (lower.includes('二') || lower === 'second' || lower === '2') return 'second';
+    if (lower.includes('三') || lower === 'third' || lower === '3') return 'third';
+    if (lower.includes('四') || lower === 'fourth' || lower === '4') return 'fourth';
+    // 尝试精确匹配 LEVEL_LABELS 的中文值
+    const exact = Object.entries(LEVEL_LABELS).find(([k, v]) => v === label.trim());
+    if (exact) return exact[0] as 'first' | 'second' | 'third' | 'fourth';
+    // 兜底：按当前 Tab
+    return activeTab;
+  };
+
+  // 处理文件导入：按"奖项"列自动分配到一/二/三/四等奖
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     setImportError('');
     const file = e.target.files?.[0];
@@ -117,8 +137,9 @@ export function PrizeAdmin({ data, onSave, onClose }: PrizeAdminProps) {
           return;
         }
 
-        // 找到"大类"和"子类"列索引
+        // 找到列索引
         const headers = jsonData[0] as string[];
+        const levelIdx = headers.findIndex(h => h.includes('奖项') || h.toLowerCase().includes('level') || h.toLowerCase().includes('等级'));
         const catIdx = headers.findIndex(h => h.includes('大类') || h.toLowerCase().includes('category'));
         const subIdx = headers.findIndex(h => h.includes('子类') || h.toLowerCase().includes('sub'));
 
@@ -126,16 +147,37 @@ export function PrizeAdmin({ data, onSave, onClose }: PrizeAdminProps) {
           setImportError('找不到"大类"和"子类"列，请使用模板格式');
           return;
         }
+        if (levelIdx === -1) {
+          setImportError('找不到"奖项"列，请确保第一列为"奖项"（一等奖/二等奖/三等奖/四等奖）');
+          return;
+        }
 
-        // 解析数据
-        const newData: Record<string, PrizeData> = {};
-        const seenSubs: Record<string, Set<string>> = {};
+        // 按奖项分组解析
+        const grouped: Record<string, Record<string, PrizeData>> = {
+          first: {},
+          second: {},
+          third: {},
+          fourth: {},
+        };
+        const seen: Record<string, Record<string, Set<string>>> = {
+          first: {},
+          second: {},
+          third: {},
+          fourth: {},
+        };
+
+        let rowCount = 0;
 
         for (let i = 1; i < jsonData.length; i++) {
           const row = jsonData[i] as any[];
+          const levelLabel = String(row[levelIdx] || '').trim();
           const catLabel = String(row[catIdx] || '').trim();
           const subLabel = String(row[subIdx] || '').trim();
           if (!catLabel || !subLabel) continue;
+
+          const level = resolveLevel(levelLabel);
+          const group = grouped[level];
+          const seenSubs = seen[level];
 
           if (!seenSubs[catLabel]) {
             seenSubs[catLabel] = new Set();
@@ -143,24 +185,39 @@ export function PrizeAdmin({ data, onSave, onClose }: PrizeAdminProps) {
           if (seenSubs[catLabel].has(subLabel)) continue;
           seenSubs[catLabel].add(subLabel);
 
-          let catKey = Object.keys(newData).find(k => newData[k].label === catLabel);
+          let catKey = Object.keys(group).find(k => group[k].label === catLabel);
           if (!catKey) {
-            catKey = 'cat_' + Date.now() + '_' + Object.keys(newData).length;
-            newData[catKey] = { label: catLabel, icon: 'star', subs: [] };
+            catKey = 'cat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+            group[catKey] = { label: catLabel, icon: 'star', subs: [] };
           }
 
           const subValue = 'sub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-          newData[catKey].subs.push({ value: subValue, label: subLabel });
+          group[catKey].subs.push({ value: subValue, label: subLabel });
+          rowCount++;
         }
 
-        if (Object.keys(newData).length === 0) {
-          setImportError('未能解析到有效数据');
+        // 计算各奖项统计
+        const stats = Object.entries(grouped)
+          .filter(([_, data]) => Object.keys(data).length > 0)
+          .map(([level, data]) => `${LEVEL_LABELS[level]} ${Object.keys(data).length} 个大类`);
+
+        if (stats.length === 0) {
+          setImportError('未能解析到有效数据，请检查"奖项"列是否为"一等奖/二等奖/三等奖/四等奖"');
           return;
         }
 
-        // 替换当前奖项级别的数据
-        setLocalData(prev => ({ ...prev, [activeTab]: newData }));
-        Notification.success({ message: `导入成功！${LEVEL_LABELS[activeTab]}共 ${Object.keys(newData).length} 个大类` });
+        // 合并到各奖项级别（有数据的覆盖，没数据的保留现有）
+        setLocalData(prev => {
+          const next = { ...prev };
+          (['first', 'second', 'third', 'fourth'] as const).forEach(level => {
+            if (Object.keys(grouped[level]).length > 0) {
+              (next as any)[level] = grouped[level];
+            }
+          });
+          return next;
+        });
+
+        Notification.success({ message: `导入成功！共 ${rowCount} 条记录，${stats.join('，')}` });
       } catch (err: any) {
         setImportError('导入失败: ' + (err.message || '未知错误'));
       }
