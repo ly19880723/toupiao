@@ -13,6 +13,7 @@ export async function GET() {
       first: {},
       second: {},
       third: {},
+      fourth: {},
     };
 
     prizes.forEach(p => {
@@ -38,10 +39,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { first, second, third } = body;
+    const { first, second, third, fourth } = body;
 
     // 按奖项级别分别处理
-    const levels: Record<string, any> = { first, second, third };
+    const levels: Record<string, any> = { first, second, third, fourth };
 
     for (const [level, data] of Object.entries(levels)) {
       // 1. 先清空该奖项级别的数据

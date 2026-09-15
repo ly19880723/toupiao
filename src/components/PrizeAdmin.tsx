@@ -14,6 +14,7 @@ interface GroupedPrizeData {
   first: Record<string, PrizeData>;
   second: Record<string, PrizeData>;
   third: Record<string, PrizeData>;
+  fourth: Record<string, PrizeData>;
 }
 
 interface PrizeAdminProps {
@@ -26,11 +27,12 @@ const LEVEL_LABELS: Record<string, string> = {
   first: '一等奖',
   second: '二等奖',
   third: '三等奖',
+  fourth: '四等奖',
 };
 
 export function PrizeAdmin({ data, onSave, onClose }: PrizeAdminProps) {
   const [localData, setLocalData] = useState<GroupedPrizeData>(() => JSON.parse(JSON.stringify(data)));
-  const [activeTab, setActiveTab] = useState<'first' | 'second' | 'third'>('first');
+  const [activeTab, setActiveTab] = useState<'first' | 'second' | 'third' | 'fourth'>('first');
   const [editingCat, setEditingCat] = useState<string | null>(null);
   const [editingSub, setEditingSub] = useState({ catKey: null as string | null, subIdx: null as number | null, value: '' });
   const [newCatLabel, setNewCatLabel] = useState('');
@@ -185,7 +187,7 @@ export function PrizeAdmin({ data, onSave, onClose }: PrizeAdminProps) {
     <div>
       {/* Tab 切换 */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
-        {(['first', 'second', 'third'] as const).map(level => (
+        {(['first', 'second', 'third', 'fourth'] as const).map(level => (
           <button
             key={level}
             onClick={() => setActiveTab(level)}

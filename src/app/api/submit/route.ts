@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, firstCat, firstSub, secondCat, secondSub, thirdCat, thirdSub, suggestions } = body;
+    const { name, firstCat, firstSub, secondCat, secondSub, thirdCat, thirdSub, fourthCat, fourthSub, suggestions } = body;
 
     if (!name || !firstCat || !firstSub || !secondCat || !secondSub || !thirdCat || !thirdSub) {
       return NextResponse.json({ error: '缺少必填字段' }, { status: 400 });
@@ -21,6 +21,8 @@ export async function POST(request: Request) {
         secondSub,
         thirdCat,
         thirdSub,
+        fourthCat: fourthCat || '',
+        fourthSub: fourthSub || '',
         suggestions: suggestions?.trim() || '',
       }
     });

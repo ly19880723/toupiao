@@ -19,6 +19,7 @@ interface GroupedPrizeData {
   first: Record<string, PrizeData>;
   second: Record<string, PrizeData>;
   third: Record<string, PrizeData>;
+  fourth: Record<string, PrizeData>;
 }
 
 const DEFAULT_PRIZE_DATA: GroupedPrizeData = {
@@ -129,6 +130,37 @@ const DEFAULT_PRIZE_DATA: GroupedPrizeData = {
       ]
     },
   },
+  fourth: {
+    shopping: {
+      label: '购物卡券',
+      icon: 'cart',
+      subs: [
+        { value: 'jd', label: '京东卡' },
+        { value: 'tmall', label: '天猫超市卡' },
+        { value: 'gas', label: '加油卡' },
+        { value: 'starbucks', label: '星巴克/咖啡券' },
+        { value: 'cinema', label: '电影卡' },
+      ]
+    },
+    food: {
+      label: '食品礼盒',
+      icon: 'coffee',
+      subs: [
+        { value: 'fruit', label: '进口水果礼盒' },
+        { value: 'snack', label: '零食大礼包' },
+        { value: 'tea', label: '茶叶礼盒' },
+      ]
+    },
+    daily: {
+      label: '生活日用',
+      icon: 'home',
+      subs: [
+        { value: 'thermos', label: '保温杯套装' },
+        { value: 'umbrella', label: '晴雨伞' },
+        { value: 'powerbank', label: '充电宝' },
+      ]
+    },
+  },
 };
 
 export default function Home() {
@@ -143,6 +175,9 @@ export default function Home() {
   const [thirdCat, setThirdCat] = useState('');
   const [thirdSub, setThirdSub] = useState('');
   const [thirdOther, setThirdOther] = useState('');
+  const [fourthCat, setFourthCat] = useState('');
+  const [fourthSub, setFourthSub] = useState('');
+  const [fourthOther, setFourthOther] = useState('');
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -171,9 +206,9 @@ export default function Home() {
       });
   }, []);
 
-  const fields = [name.trim(), firstCat && (firstSub === '__other__' ? firstOther.trim() : firstSub), secondCat && (secondSub === '__other__' ? secondOther.trim() : secondSub), thirdCat && (thirdSub === '__other__' ? thirdOther.trim() : thirdSub)];
+  const fields = [name.trim(), firstCat && (firstSub === '__other__' ? firstOther.trim() : firstSub), secondCat && (secondSub === '__other__' ? secondOther.trim() : secondSub), thirdCat && (thirdSub === '__other__' ? thirdOther.trim() : thirdSub), fourthCat && (fourthSub === '__other__' ? fourthOther.trim() : fourthSub)];
   const filled = fields.filter(Boolean).length;
-  const progress = Math.round((filled / 4) * 100);
+  const progress = Math.round((filled / 5) * 100);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -181,6 +216,7 @@ export default function Home() {
     if (!firstCat || (!firstSub && firstSub !== '__other__') || (firstSub === '__other__' && !firstOther.trim())) errs.first = '请选择或填写一等奖的奖品';
     if (!secondCat || (!secondSub && secondSub !== '__other__') || (secondSub === '__other__' && !secondOther.trim())) errs.second = '请选择或填写二等奖的奖品';
     if (!thirdCat || (!thirdSub && thirdSub !== '__other__') || (thirdSub === '__other__' && !thirdOther.trim())) errs.third = '请选择或填写三等奖的奖品';
+    if (fourthCat && (!fourthSub && fourthSub !== '__other__') || (fourthSub === '__other__' && !fourthOther.trim())) errs.fourth = '请填写四等奖的奖品';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -205,6 +241,8 @@ export default function Home() {
       secondSub: secondSub === '__other__' ? `__OTHER__:${secondOther.trim()}` : secondSub,
       thirdCat,
       thirdSub: thirdSub === '__other__' ? `__OTHER__:${thirdOther.trim()}` : thirdSub,
+      fourthCat,
+      fourthSub: fourthSub === '__other__' ? `__OTHER__:${fourthOther.trim()}` : fourthSub,
       suggestions: suggestions.trim(),
     };
 
@@ -235,10 +273,11 @@ export default function Home() {
     setFirstCat(''); setFirstSub(''); setFirstOther('');
     setSecondCat(''); setSecondSub(''); setSecondOther('');
     setThirdCat(''); setThirdSub(''); setThirdOther('');
+    setFourthCat(''); setFourthSub(''); setFourthOther('');
     setErrors({}); setSubmitted(false);
   };
 
-  const getPrizeLabel = (cat: string, sub: string, level: 'first' | 'second' | 'third') => {
+  const getPrizeLabel = (cat: string, sub: string, level: 'first' | 'second' | 'third' | 'fourth') => {
     if (!cat || !sub) return '未选';
     const group = prizeData[level];
     const c = group?.[cat];
@@ -294,7 +333,7 @@ export default function Home() {
   };
 
   const renderPrizeSelect = (
-    level: 'first' | 'second' | 'third',
+    level: 'first' | 'second' | 'third' | 'fourth',
     cat: string, setCat: (v: string) => void,
     sub: string, setSub: (v: string) => void,
     other: string, setOther: (v: string) => void,
@@ -377,6 +416,12 @@ export default function Home() {
               <Tag color="yellow">三等奖</Tag>
               <span style={{ marginLeft: '8px' }}>{getPrizeLabel(thirdCat, thirdSub, 'third')}</span>
             </div>
+            {(fourthCat || fourthSub) && (
+              <div style={{ marginBottom: '10px' }}>
+                <Tag color="yellow">四等奖</Tag>
+                <span style={{ marginLeft: '8px' }}>{getPrizeLabel(fourthCat, fourthSub, 'fourth')}</span>
+              </div>
+            )}
             {suggestions && (
               <div style={{ marginBottom: '10px' }}>
                 <Tag color="green">对年会建议</Tag>
@@ -394,7 +439,7 @@ export default function Home() {
     );
   }
 
-  const summaryText = `姓名：${name}；一等奖：${getPrizeLabel(firstCat, firstSub, 'first')}；二等奖：${getPrizeLabel(secondCat, secondSub, 'second')}；三等奖：${getPrizeLabel(thirdCat, thirdSub, 'third')}。`;
+  const summaryText = `姓名：${name}；一等奖：${getPrizeLabel(firstCat, firstSub, 'first')}；二等奖：${getPrizeLabel(secondCat, secondSub, 'second')}；三等奖：${getPrizeLabel(thirdCat, thirdSub, 'third')}；${fourthCat || fourthSub ? `四等奖：${getPrizeLabel(fourthCat, fourthSub, 'fourth')}` : '四等奖：未选'}。`;
 
   return (
     <>
@@ -443,6 +488,11 @@ export default function Home() {
 
           {/* 三等奖 */}
           {renderPrizeSelect('third', thirdCat, setThirdCat, thirdSub, setThirdSub, thirdOther, setThirdOther, 'third', '三等奖（期望）')}
+
+          <Divider type="dashed" style={{ margin: '16px 0' }} />
+
+          {/* 四等奖 */}
+          {renderPrizeSelect('fourth', fourthCat, setFourthCat, fourthSub, setFourthSub, fourthOther, setFourthOther, 'fourth', '四等奖（期望）')}
         </div>
 
         {/* Suggestions */}

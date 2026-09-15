@@ -14,6 +14,7 @@ interface GroupedPrizeData {
   first: Record<string, PrizeData>;
   second: Record<string, PrizeData>;
   third: Record<string, PrizeData>;
+  fourth: Record<string, PrizeData>;
 }
 
 interface StatsPanelProps {
@@ -131,8 +132,9 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
   const firstPrize = useMemo(() => calculateStats('firstCat', 'firstSub', prizeData.first), [submissions, prizeData.first]);
   const secondPrize = useMemo(() => calculateStats('secondCat', 'secondSub', prizeData.second), [submissions, prizeData.second]);
   const thirdPrize = useMemo(() => calculateStats('thirdCat', 'thirdSub', prizeData.third), [submissions, prizeData.third]);
+  const fourthPrize = useMemo(() => calculateStats('fourthCat', 'fourthSub', prizeData.fourth || {}), [submissions, prizeData.fourth]);
 
-  const getPrizeLabel = (catValue: string, subValue: string, level: 'first' | 'second' | 'third') => {
+  const getPrizeLabel = (catValue: string, subValue: string, level: 'first' | 'second' | 'third' | 'fourth') => {
     if (!catValue) return '-';
     const cat = prizeData[level]?.[catValue];
     if (!cat) return catValue;
@@ -160,6 +162,7 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
       一等奖: getPrizeLabel(sub.firstCat, sub.firstSub, 'first'),
       二等奖: getPrizeLabel(sub.secondCat, sub.secondSub, 'second'),
       三等奖: getPrizeLabel(sub.thirdCat, sub.thirdSub, 'third'),
+      四等奖: getPrizeLabel(sub.fourthCat, sub.fourthSub, 'fourth'),
       建议: sub.suggestions || '-',
       提交时间: sub.createdAt ? new Date(sub.createdAt).toLocaleString('zh-CN') : '-',
     }));
@@ -167,7 +170,7 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
     XLSX.utils.book_append_sheet(wb, wsRecords, '提交名单');
 
     // Helper to build prize stats sheet
-    const buildPrizeSheet = (title: string, level: 'first' | 'second' | 'third', prizeStats: PrizeStats, color: string) => {
+    const buildPrizeSheet = (title: string, level: 'first' | 'second' | 'third' | 'fourth', prizeStats: PrizeStats, color: string) => {
       const rows: any[] = [];
       Object.entries(prizeStats.stats)
         .filter(([_, cat]) => cat.count > 0)
@@ -206,6 +209,7 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
     const firstRows = buildPrizeSheet('一等奖', 'first', firstPrize, '#c49a2e');
     const secondRows = buildPrizeSheet('二等奖', 'second', secondPrize, '#5a9e8a');
     const thirdRows = buildPrizeSheet('三等奖', 'third', thirdPrize, '#8f6a4e');
+    const fourthRows = buildPrizeSheet('四等奖', 'fourth', fourthPrize, '#6a8fb5');
 
     const wsFirst = XLSX.utils.json_to_sheet(firstRows);
     XLSX.utils.book_append_sheet(wb, wsFirst, '一等奖统计');
@@ -215,6 +219,9 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
 
     const wsThird = XLSX.utils.json_to_sheet(thirdRows);
     XLSX.utils.book_append_sheet(wb, wsThird, '三等奖统计');
+
+    const wsFourth = XLSX.utils.json_to_sheet(fourthRows);
+    XLSX.utils.book_append_sheet(wb, wsFourth, '四等奖统计');
 
     XLSX.writeFile(wb, `年会奖品许愿统计_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
@@ -442,6 +449,7 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
       {renderPrizeCard('一等奖投票分布', '#c49a2e', firstPrize)}
       {renderPrizeCard('二等奖投票分布', '#5a9e8a', secondPrize)}
       {renderPrizeCard('三等奖投票分布', '#8f6a4e', thirdPrize)}
+      {renderPrizeCard('四等奖投票分布', '#6a8fb5', fourthPrize)}
 
       <div
         style={{
@@ -471,6 +479,7 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
                   <th style={{ textAlign: 'left', padding: '8px', fontSize: '14px' }}>一等奖</th>
                   <th style={{ textAlign: 'left', padding: '8px', fontSize: '14px' }}>二等奖</th>
                   <th style={{ textAlign: 'left', padding: '8px', fontSize: '14px' }}>三等奖</th>
+                  <th style={{ textAlign: 'left', padding: '8px', fontSize: '14px' }}>四等奖</th>
                 </tr>
               </thead>
               <tbody>
@@ -480,6 +489,7 @@ export default function StatsPanel({ prizeData }: StatsPanelProps) {
                     <td style={{ padding: '8px' }}>{getPrizeLabel(sub.firstCat, sub.firstSub, 'first')}</td>
                     <td style={{ padding: '8px' }}>{getPrizeLabel(sub.secondCat, sub.secondSub, 'second')}</td>
                     <td style={{ padding: '8px' }}>{getPrizeLabel(sub.thirdCat, sub.thirdSub, 'third')}</td>
+                    <td style={{ padding: '8px' }}>{getPrizeLabel(sub.fourthCat, sub.fourthSub, 'fourth')}</td>
                   </tr>
                 ))}
               </tbody>

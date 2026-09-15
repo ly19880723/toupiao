@@ -17,6 +17,8 @@ model SurveyResponse {
   secondSub String
   thirdCat  String
   thirdSub  String
+  fourthCat String? @default("")
+  fourthSub  String? @default("")
   suggestions String? @default("")
   createdAt DateTime @default(now())
 
